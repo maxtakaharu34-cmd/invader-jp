@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#000" />
+<title>侵略者だ！</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
+body {
+  font-family: "Press Start 2P", monospace;
+  color: #0f0;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+#app {
+  display: flex; flex-direction: column; align-items: center;
+  height: 100dvh; padding: 6px 8px; gap: 6px;
+  max-width: 480px; margin: 0 auto;
+}
+header { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.title { font-size: 14px; color: #0f0; text-shadow: 0 0 8px #0f0; margin: 0; }
+.icon-btn {
+  background: #000; border: 2px solid #0f0; color: #0f0;
+  padding: 4px 8px; font-family: inherit; font-size: 10px;
+  cursor: pointer; box-shadow: 0 0 4px #0f0;
+}
+.icon-btn:active { background: #003300; }
+.hud {
+  width: 100%; display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px; border: 2px solid #0f0; padding: 6px 8px;
+  font-size: 9px; box-shadow: 0 0 6px #0f0;
+}
+.hud .v { color: #fff; font-size: 14px; margin-top: 2px; }
+.hud .right { text-align: right; }
+.stage {
+  position: relative; flex: 1 0 auto; min-height: 0;
+  display: flex; align-items: center; justify-content: center; max-width: 100%;
+}
+canvas#game {
+  display: block; background: #000; border: 2px solid #0f0;
+  box-shadow: 0 0 16px #0f0; max-width: 100%; max-height: 100%;
+  height: auto; image-rendering: pixelated;
+}
+.banner {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0; transition: opacity 0.2s;
+}
+.banner.show { opacity: 1; }
+.banner .text {
+  font-size: 22px; color: #0f0; text-shadow: 0 0 12px #0f0;
+}
+.banner.go .text { color: #f44; text-shadow: 0 0 12px #f44; }
+.banner.win .text { color: #fc0; text-shadow: 0 0 12px #fc0; }
+
+.controls {
+  width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-bottom: 4px;
+}
+.move-pad { display: grid; grid-template-columns: 60px 60px; gap: 8px; justify-content: center; }
+.fire-pad { display: flex; align-items: center; justify-content: center; }
+.pad-btn {
+  background: rgba(0,255,0,0.1); border: 2px solid #0f0; color: #0f0;
+  font-family: inherit; font-size: 14px; cursor: pointer;
+  width: 60px; height: 60px; border-radius: 50%;
+  box-shadow: 0 0 6px #0f0, inset 0 0 6px rgba(0,255,0,0.3);
+}
+.pad-btn:active { background: rgba(0,255,0,0.4); transform: scale(0.93); }
+.fire-pad .pad-btn { width: 96px; height: 96px; font-size: 16px; color: #f44; border-color: #f44; box-shadow: 0 0 6px #f44; }
+.help { font-size: 8px; color: #0f0; text-align: center; line-height: 1.6; opacity: 0.8; margin-top: 4px; }
+
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  display: none; align-items: center; justify-content: center; z-index: 100; padding: 24px;
+}
+.overlay.show { display: flex; }
+.overlay .box {
+  background: #000; border: 2px solid #0f0; padding: 20px 22px;
+  text-align: center; box-shadow: 0 0 24px #0f0; max-width: 320px;
+}
+.overlay h2 { margin: 0 0 10px; font-size: 18px; color: #0f0; text-shadow: 0 0 8px #0f0; }
+.overlay p { font-size: 10px; line-height: 1.8; opacity: 0.85; margin: 8px 0; }
+.overlay button {
+  background: #000; color: #0f0; border: 2px solid #0f0;
+  padding: 10px 20px; font-family: inherit; font-size: 12px; cursor: pointer;
+  margin-top: 10px; box-shadow: 0 0 6px #0f0;
+  animation: btnBlink 0.8s steps(2) infinite;
+}
+@keyframes btnBlink {
+  0%, 100% { background: #000; color: #0f0; }
+  50% { background: #0f0; color: #000; }
+}
+.score-row {
+  display: flex; justify-content: space-between;
+  border: 1px solid #0f0; padding: 6px 8px; margin: 6px 0; font-size: 10px;
+}
+.score-row .v { color: #fc0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1 class="title">侵略者だ！</h1>
+    <div style="display:flex; gap:5px;">
+      <button class="icon-btn" id="btn-mute">SE</button>
+      <button class="icon-btn" id="btn-restart">RST</button>
+    </div>
+  </header>
+  <div class="hud">
+    <div><div>SCORE</div><div class="v" id="score">0</div></div>
+    <div><div>WAVE</div><div class="v" id="wave">1</div></div>
+    <div class="right"><div>LIVES</div><div class="v" id="lives">3</div></div>
+  </div>
+  <div class="stage">
+    <canvas id="game" width="360" height="480"></canvas>
+    <div class="banner" id="banner"><div class="text" id="banner-text">READY</div></div>
+  </div>
+  <div class="controls">
+    <div class="move-pad">
+      <button class="pad-btn" data-act="left">◀</button>
+      <button class="pad-btn" data-act="right">▶</button>
+    </div>
+    <div class="fire-pad">
+      <button class="pad-btn" data-act="fire">FIRE</button>
+    </div>
+  </div>
+  <div class="help">← → / A D で移動 ・ SPACE / FIRE で発射</div>
+</div>
+
+<div class="overlay show" id="start-overlay">
+  <div class="box">
+    <h2>侵略者だ！</h2>
+    <p>地球を侵略する敵を全て撃ち落とせ。<br/>UFOは高得点ボーナス！</p>
+    <button id="btn-start">▶ ゲーム開始</button>
+  </div>
+</div>
+<div class="overlay" id="end-overlay">
+  <div class="box">
+    <h2 id="end-title">GAME OVER</h2>
+    <div class="score-row"><div>SCORE</div><div class="v" id="end-score">0</div></div>
+    <div class="score-row"><div>WAVE</div><div class="v" id="end-wave">1</div></div>
+    <button id="btn-again">▶ もういちど</button>
+  </div>
+</div>
+
+<script src="invader.js" defer></script>
+</body>
+</html>
