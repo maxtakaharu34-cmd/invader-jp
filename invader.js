@@ -6,9 +6,9 @@
   const ROWS = 5, COLS = 10;
   const INV_W = 22, INV_H = 16, INV_GAP_X = 8, INV_GAP_Y = 10;
   const PLAYER_Y = H - 40;
-  const PLAYER_SPEED = 3.4;
-  const BULLET_SPEED = 6;
-  const ENEMY_BULLET_SPEED = 2.6;
+  const PLAYER_SPEED = 3.8;
+  const BULLET_SPEED = 7;
+  const ENEMY_BULLET_SPEED = 1.7;
   const FORMATION_W = COLS * (INV_W + INV_GAP_X) - INV_GAP_X;
 
   const $ = (id) => document.getElementById(id);
@@ -97,9 +97,9 @@
       }
     }
     state.invDir = 1;
-    state.invDx = 0.6;
+    state.invDx = 0.4;
     state.invStepTimer = 0;
-    state.invStepInterval = Math.max(8, 28 - state.wave * 2);
+    state.invStepInterval = Math.max(14, 38 - state.wave * 2);
     state.enemyBullets = [];
     state.bullet = null;
     state.ufo = null;
@@ -113,7 +113,7 @@
   function resetGame() {
     state.score = 0;
     state.wave = 1;
-    state.lives = 3;
+    state.lives = 5;
     state.over = false;
     spawnWave();
     updateHud();
@@ -161,7 +161,7 @@
     // Invader formation step
     state.invStepTimer++;
     const aliveCount = state.invaders.filter((i) => i.alive).length;
-    const interval = Math.max(4, state.invStepInterval - Math.floor((COLS * ROWS - aliveCount) * 0.4));
+    const interval = Math.max(8, state.invStepInterval - Math.floor((COLS * ROWS - aliveCount) * 0.25));
     if (state.invStepTimer >= interval) {
       state.invStepTimer = 0;
       stepInvaders();
@@ -170,7 +170,7 @@
     }
 
     // Enemies fire occasionally — pick a random alive invader from the bottom of each column
-    if (Math.random() < 0.02 + state.wave * 0.005) {
+    if (Math.random() < 0.008 + state.wave * 0.002) {
       const shooters = bottomShooters();
       if (shooters.length > 0) {
         const s = shooters[Math.floor(Math.random() * shooters.length)];
@@ -271,7 +271,7 @@
     if (stepDown) {
       for (const inv of state.invaders) inv.y += 6;
       state.invDir *= -1;
-      state.invDx = Math.min(2.4, state.invDx + 0.05);
+      state.invDx = Math.min(1.6, state.invDx + 0.03);
     } else {
       const dx = state.invDir * state.invDx;
       for (const inv of state.invaders) inv.x += dx;
